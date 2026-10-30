@@ -10,17 +10,20 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Theme-aware: values come from CSS variables in globals.css
+        white: 'rgb(var(--c-fg) / <alpha-value>)',
+        black: 'rgb(var(--c-bg) / <alpha-value>)',
         nothing: {
-          black: '#000000',
-          dark: '#0B0B0C',
-          card: '#141416',
-          hover: '#1D1D20',
-          border: '#26262A',
+          black: 'rgb(var(--c-bg) / <alpha-value>)',
+          dark: 'rgb(var(--c-dark) / <alpha-value>)',
+          card: 'rgb(var(--c-card) / <alpha-value>)',
+          hover: 'rgb(var(--c-hover) / <alpha-value>)',
+          border: 'rgb(var(--c-border) / <alpha-value>)',
           red: '#D71921',
           'red-hover': '#B8141B',
-          gray: '#86868B',
-          muted: '#86868B',
-          light: '#E6E6E6',
+          gray: 'rgb(var(--c-gray) / <alpha-value>)',
+          muted: 'rgb(var(--c-gray) / <alpha-value>)',
+          light: 'rgb(var(--c-light) / <alpha-value>)',
         },
       },
       fontFamily: {

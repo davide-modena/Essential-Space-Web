@@ -739,7 +739,7 @@ export default function DashboardPage() {
                       className={`px-3.5 py-1.5 rounded-full text-xs font-mono transition-all flex items-center gap-1.5 flex-shrink-0 select-none ${
                         activeCaptureFrom === ''
                           ? 'bg-white text-black font-semibold shadow-sm'
-                          : 'bg-[#1c1c1e] text-[#a0a0a0] hover:text-white hover:bg-[#252528] border border-transparent hover:border-white/10'
+                          : 'bg-nothing-card text-nothing-gray hover:text-white hover:bg-nothing-border border border-transparent hover:border-white/10'
                       }`}
                     >
                       <span>All</span>
@@ -756,13 +756,13 @@ export default function DashboardPage() {
                           className={`px-3.5 py-1.5 rounded-full text-xs font-mono transition-all flex items-center gap-1.5 flex-shrink-0 select-none ${
                             isSelected
                               ? 'bg-white text-black font-semibold shadow-sm'
-                              : 'bg-[#1c1c1e] text-[#a0a0a0] hover:text-white hover:bg-[#252528] border border-transparent hover:border-white/10'
+                              : 'bg-nothing-card text-nothing-gray hover:text-white hover:bg-nothing-border border border-transparent hover:border-white/10'
                           }`}
                         >
                           <span>{src.label}</span>
                           <span
                             className={`text-[10px] ${
-                              isSelected ? 'text-black/75 font-semibold' : 'text-[#707070]'
+                              isSelected ? 'text-black/75 font-semibold' : 'text-nothing-gray'
                             }`}
                           >
                             {src.count}
@@ -818,7 +818,7 @@ export default function DashboardPage() {
                   className={`px-3 py-1.5 rounded-xl border font-mono text-xs flex items-center gap-1.5 transition-all ${
                     isSelectMode
                       ? 'bg-nothing-red text-white border-nothing-red shadow-sm'
-                      : 'bg-[#181818] border-nothing-border text-nothing-light hover:text-white hover:border-nothing-gray/60'
+                      : 'bg-nothing-card border-nothing-border text-nothing-light hover:text-white hover:border-nothing-gray/60'
                   }`}
                 >
                   <CheckSquare size={13} />
@@ -830,7 +830,7 @@ export default function DashboardPage() {
                     type="button"
                     onClick={handleToggleSort}
                     title={sortOrder === 'desc' ? 'Sort: Oldest first' : 'Sort: Latest first'}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-nothing-border bg-[#181818] hover:bg-nothing-hover hover:border-nothing-gray/60 text-xs font-mono text-nothing-light hover:text-white transition-all cursor-pointer select-none"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-nothing-border bg-nothing-card hover:bg-nothing-hover hover:border-nothing-gray/60 text-xs font-mono text-nothing-light hover:text-white transition-all cursor-pointer select-none"
                   >
                     {sortOrder === 'desc' ? (
                       <ArrowDownWideNarrow size={13} className="text-nothing-red shrink-0" />

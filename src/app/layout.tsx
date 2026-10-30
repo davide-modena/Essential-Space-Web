@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import './globals.css';
+import { THEME_INIT_SCRIPT } from '@/lib/theme';
 
 const ndot57 = localFont({
   src: '../../public/fonts/Ndot57Caps-Regular.otf',
@@ -45,6 +46,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body
         suppressHydrationWarning
         className={`${ndot55.variable} ${ndot57.variable} ${ndotOriginal.variable} bg-black text-nothing-light min-h-screen selection:bg-nothing-red selection:text-white`}

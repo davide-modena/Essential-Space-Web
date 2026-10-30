@@ -142,7 +142,7 @@ export default function SelectCollectionModal({
     >
       <div
         onClick={e => e.stopPropagation()}
-        className="w-full max-w-md bg-[#141414] border border-nothing-border rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-150"
+        className="w-full max-w-md bg-nothing-card border border-nothing-border rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-150"
       >
         {/* Header */}
         <div className="p-5 border-b border-nothing-border/60 flex items-center justify-between">
@@ -181,7 +181,7 @@ export default function SelectCollectionModal({
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search collections..."
-              className="w-full bg-[#1A1A1A] border border-nothing-border/60 rounded-xl pl-9 pr-8 py-2 text-xs font-mono text-white placeholder-nothing-gray focus:outline-none focus:border-nothing-red transition-colors"
+              className="w-full bg-nothing-hover border border-nothing-border/60 rounded-xl pl-9 pr-8 py-2 text-xs font-mono text-white placeholder-nothing-gray focus:outline-none focus:border-nothing-red transition-colors"
             />
             {search && (
               <button
@@ -252,7 +252,7 @@ export default function SelectCollectionModal({
             className={`w-full flex items-center justify-between p-3 rounded-xl border text-left transition-all ${
               selectedColIds.length === 0
                 ? 'bg-nothing-red/15 border-nothing-red/60 text-white'
-                : 'bg-[#1A1A1A]/60 border-nothing-border/40 text-nothing-light hover:bg-[#1A1A1A] hover:border-nothing-gray/50'
+                : 'bg-nothing-hover/60 border-nothing-border/40 text-nothing-light hover:bg-nothing-hover hover:border-nothing-gray/50'
             }`}
           >
             <div className="flex items-center gap-3">
@@ -286,7 +286,7 @@ export default function SelectCollectionModal({
                 className={`w-full flex items-center justify-between p-3 rounded-xl border text-left transition-all ${
                   isSelected
                     ? 'bg-white/[0.08] border-nothing-red/80 text-white shadow-sm'
-                    : 'bg-[#1A1A1A]/60 border-nothing-border/40 text-nothing-light hover:bg-[#1A1A1A] hover:border-nothing-gray/50'
+                    : 'bg-nothing-hover/60 border-nothing-border/40 text-nothing-light hover:bg-nothing-hover hover:border-nothing-gray/50'
                 }`}
               >
                 <div className="flex items-center gap-3 min-w-0">
@@ -325,7 +325,7 @@ export default function SelectCollectionModal({
         </div>
 
         {/* Footer actions */}
-        <div className="p-4 border-t border-nothing-border/60 bg-[#161616] flex items-center justify-between gap-3">
+        <div className="p-4 border-t border-nothing-border/60 bg-nothing-card flex items-center justify-between gap-3">
           <div className="text-[11px] font-mono text-nothing-gray">
             {selectedColIds.length === 0 ? (
               <span>Will not belong to any collection</span>

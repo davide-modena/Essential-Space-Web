@@ -13,7 +13,11 @@ import {
   X,
   Check,
   User as UserIcon,
+  Monitor,
+  Sun,
+  Moon,
 } from 'lucide-react';
+import { useTheme, type ThemePreference } from '@/lib/theme';
 import {
   SUPPORTED_LANGUAGES,
   getLanguageOption,
@@ -46,6 +50,7 @@ export default function Navbar({
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [langSearch, setLangSearch] = useState('');
   const [isAccountOpen, setIsAccountOpen] = useState(false);
+  const { theme, setTheme } = useTheme();
 
   const langRef = useRef<HTMLDivElement>(null);
   const accountRef = useRef<HTMLDivElement>(null);
@@ -166,7 +171,7 @@ export default function Navbar({
 
             {/* Language Popover Menu */}
             {isLangOpen && (
-              <div className="absolute right-0 sm:right-auto sm:left-0 top-full mt-2 w-72 sm:w-80 rounded-2xl bg-[#141414]/95 border border-white/20 shadow-2xl p-2.5 z-50 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
+              <div className="absolute right-0 sm:right-auto sm:left-0 top-full mt-2 w-72 sm:w-80 rounded-2xl bg-nothing-card/95 border border-white/20 shadow-2xl p-2.5 z-50 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
                 <div className="px-2 pt-1 pb-2 border-b border-nothing-border/50">
                   <span className="font-dot text-[10px] text-nothing-gray uppercase tracking-wider block">
                     AI SUMMARY & TRANSCRIPT LANGUAGE
@@ -307,10 +312,10 @@ export default function Navbar({
 
             {/* Account Popup */}
             {isAccountOpen && (
-              <div className="absolute right-0 top-full mt-2 w-72 sm:w-80 rounded-2xl bg-[#141414]/95 border border-white/20 shadow-2xl p-4 z-50 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
+              <div className="absolute right-0 top-full mt-2 w-72 sm:w-80 rounded-2xl bg-nothing-card/95 border border-white/20 shadow-2xl p-4 z-50 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
                 {/* Large Abstract Account Avatar */}
                 <div className="flex flex-col items-center text-center">
-                  <div className="w-14 h-14 rounded-full bg-[#1A1A1A] border border-white/25 text-white font-dot text-2xl flex items-center justify-center shadow-inner mb-2.5">
+                  <div className="w-14 h-14 rounded-full bg-nothing-hover border border-white/25 text-white font-dot text-2xl flex items-center justify-center shadow-inner mb-2.5">
                     {userInitial}
                   </div>
 
@@ -329,6 +334,36 @@ export default function Navbar({
                 </div>
 
                 <div className="h-[1px] bg-nothing-border/60 my-3.5" />
+
+                {/* Theme Selector */}
+                <div className="mb-3.5">
+                  <span className="block font-dot text-[10px] text-nothing-gray uppercase tracking-widest mb-2">
+                    Theme
+                  </span>
+                  <div role="radiogroup" aria-label="Theme" className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-nothing-hover border border-nothing-border">
+                    {([
+                      { value: 'system', label: 'System', Icon: Monitor },
+                      { value: 'light', label: 'Light', Icon: Sun },
+                      { value: 'dark', label: 'Dark', Icon: Moon },
+                    ] as { value: ThemePreference; label: string; Icon: typeof Sun }[]).map(({ value, label, Icon }) => (
+                      <button
+                        key={value}
+                        type="button"
+                        role="radio"
+                        aria-checked={theme === value}
+                        onClick={() => setTheme(value)}
+                        className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg font-mono text-[11px] transition-all cursor-pointer ${
+                          theme === value
+                            ? 'bg-white text-black shadow-sm'
+                            : 'text-nothing-gray hover:text-white'
+                        }`}
+                      >
+                        <Icon size={12} />
+                        <span>{label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
                 {/* Log Out Button */}
                 <button

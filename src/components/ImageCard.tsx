@@ -134,7 +134,7 @@ export default function ImageCard({
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
           </div>
         ) : (card.cachedImageUrl || card.imageUrl) && imageError ? (
-          <div className="w-full h-24 mb-3 rounded-xl bg-[#141414] border border-dashed border-nothing-border/60 flex flex-col items-center justify-center gap-1.5 p-3 text-nothing-gray">
+          <div className="w-full h-24 mb-3 rounded-xl bg-nothing-card border border-dashed border-nothing-border/60 flex flex-col items-center justify-center gap-1.5 p-3 text-nothing-gray">
             <ImageIcon size={20} className="text-nothing-gray/50" />
             <span className="text-[11px] font-mono text-nothing-gray text-center">
               {card.targetState === 1

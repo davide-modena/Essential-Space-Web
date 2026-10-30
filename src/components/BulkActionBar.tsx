@@ -40,7 +40,7 @@ export default function BulkActionBar({
 
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 max-w-[95vw] sm:max-w-2xl w-full px-2 animate-in fade-in slide-in-from-bottom-5 duration-200">
-      <div className="bg-[#121212]/95 backdrop-blur-xl border border-nothing-border shadow-[0_16px_50px_rgba(0,0,0,0.9)] rounded-2xl p-2 sm:px-4 sm:py-2.5 flex items-center justify-between gap-2 sm:gap-4">
+      <div className="bg-nothing-card/95 backdrop-blur-xl border border-nothing-border shadow-[0_16px_50px_rgba(0,0,0,0.9)] rounded-2xl p-2 sm:px-4 sm:py-2.5 flex items-center justify-between gap-2 sm:gap-4">
         {/* Left: Counter and Select All toggle */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <div className="px-2.5 py-1 rounded-lg bg-nothing-red/20 border border-nothing-red/40 text-nothing-red font-dot text-xs uppercase tracking-wider shrink-0">
