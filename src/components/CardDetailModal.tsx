@@ -31,6 +31,7 @@ import SelectCollectionModal from './SelectCollectionModal';
 import { updateDbCard } from '@/lib/db';
 import { updateCloudCards } from '@/lib/nothing-cards';
 import { safeHref } from '@/lib/safe-url';
+import CopyImageButton from './CopyImageButton';
 
 interface CardDetailModalProps {
   card: Card | null;
@@ -317,6 +318,8 @@ export default function CardDetailModal({
               <span className="absolute bottom-3 right-3 px-2.5 py-1 rounded-lg bg-black/75 border border-nothing-border text-[11px] font-mono text-white flex items-center gap-1.5">
                 <Maximize2 size={12} /> Full Screen
               </span>
+              <CopyImageButton url={previewImg} className="absolute top-3 right-3" />
+
             </div>
           </div>
         )}
@@ -950,6 +953,7 @@ export default function CardDetailModal({
             className="max-h-[85vh] w-auto rounded-xl object-contain border border-nothing-border"
           />
           <div className="flex items-center gap-4 mt-3">
+            <CopyImageButton url={previewImg} />
             <a
               href={safeHref(previewImg)}
               target="_blank"

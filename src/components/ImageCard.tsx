@@ -12,6 +12,7 @@ import {
   Square,
 } from 'lucide-react';
 import type { Card } from '@/types';
+import CopyImageButton from './CopyImageButton';
 
 export default function ImageCard({
   card,
@@ -132,6 +133,12 @@ export default function ImageCard({
               loading="lazy"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+            {!isSelectMode && (
+              <CopyImageButton
+                url={(card.cachedImageUrl || card.imageUrl)!}
+                className="absolute top-2 right-2 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
+              />
+            )}
           </div>
         ) : (card.cachedImageUrl || card.imageUrl) && imageError ? (
           <div className="w-full h-24 mb-3 rounded-xl bg-nothing-card border border-dashed border-nothing-border/60 flex flex-col items-center justify-center gap-1.5 p-3 text-nothing-gray">
