@@ -11,12 +11,15 @@
 (function() {
     'use strict';
 
+    // Set this to the exact origin of your Essential Space dashboard.
+    // The token is only delivered to this origin, never to '*'.
+    const DASHBOARD_ORIGIN = 'https://your-essential-space.example.com';
+
     function sendToken() {
         const token = localStorage.getItem('nothingAuth_account-app-web_accessToken');
         if (token) {
-            console.log('[Nothing Sync] Access token detected!');
             if (window.opener) {
-                window.opener.postMessage({ type: 'NOTHING_AUTH_TOKEN', token: token }, '*');
+                window.opener.postMessage({ type: 'NOTHING_AUTH_TOKEN', token: token }, DASHBOARD_ORIGIN);
                 window.close();
             }
         }

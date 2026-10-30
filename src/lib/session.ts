@@ -3,10 +3,12 @@ import { cookies, headers } from 'next/headers';
 import type { NothingUser } from '@/types';
 
 function getSecretKey(): string {
-  return (
-    process.env.SESSION_SECRET ||
-    'nothing-essential-space-secret-key-32chars-minimum!'
-  );
+  const secret = process.env.SESSION_SECRET;
+  if (!secret || secret.length < 32) {
+    // Never fall back to a public default: anyone could forge sessions
+    throw new Error('SESSION_SECRET must be set (at least 32 characters)');
+  }
+  return secret;
 }
 
 function getEncodedKey(): Uint8Array {

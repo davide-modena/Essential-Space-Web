@@ -2,6 +2,7 @@
 
 import { ExternalLink, Bookmark, Tag, Maximize2, Check, Square } from 'lucide-react';
 import type { Card } from '@/types';
+import { safeHref } from '@/lib/safe-url';
 
 export default function LinkCard({
   card,
@@ -119,7 +120,7 @@ export default function LinkCard({
               )}
               {candidateUrl && (
                 <a
-                  href={candidateUrl}
+                  href={safeHref(candidateUrl)}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={e => e.stopPropagation()}
@@ -139,7 +140,7 @@ export default function LinkCard({
           {/* Domain Pill (matching Nothing OS Library View) */}
           {(domain || candidateUrl) && (
             <a
-              href={candidateUrl || '#'}
+              href={safeHref(candidateUrl) || '#'}
               target="_blank"
               rel="noopener noreferrer"
               onClick={e => e.stopPropagation()}

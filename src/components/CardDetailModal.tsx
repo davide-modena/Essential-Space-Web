@@ -30,6 +30,7 @@ import { useScrollLock } from '@/lib/useScrollLock';
 import SelectCollectionModal from './SelectCollectionModal';
 import { updateDbCard } from '@/lib/db';
 import { updateCloudCards } from '@/lib/nothing-cards';
+import { safeHref } from '@/lib/safe-url';
 
 interface CardDetailModalProps {
   card: Card | null;
@@ -149,9 +150,10 @@ export default function CardDetailModal({
   };
 
   const previewImg = card.cachedImageUrl || card.imageUrl || card.link?.preview;
-  const candidateUrl =
+  const candidateUrl = safeHref(
     card.link?.url ||
-    (card.audio?.transcript?.startsWith('http') ? card.audio.transcript.trim() : undefined);
+      (card.audio?.transcript?.startsWith('http') ? card.audio.transcript.trim() : undefined)
+  );
 
   const formatDateTimeRange = () => {
     const d = new Date(card.createTime);
@@ -184,10 +186,10 @@ export default function CardDetailModal({
     >
       <div
         onClick={e => e.stopPropagation()}
-        className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl bg-[#111111] border border-nothing-border shadow-2xl p-5 sm:p-7 space-y-4 text-white"
+        className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl bg-nothing-card border border-nothing-border shadow-2xl p-5 sm:p-7 space-y-4 text-white"
       >
         {/* Top Header Card */}
-        <div className="rounded-2xl bg-[#1A1A1A] border border-nothing-border/60 p-4 sm:p-5">
+        <div className="rounded-2xl bg-nothing-hover border border-nothing-border/60 p-4 sm:p-5">
           <div className="flex items-start justify-between gap-4 mb-2">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="p-1.5 rounded-lg bg-nothing-red/20 text-nothing-red">
@@ -262,7 +264,7 @@ export default function CardDetailModal({
                     {card.speakers.map((sp, i) => (
                       <span
                         key={i}
-                        className="w-6 h-6 rounded-full bg-nothing-light text-black font-dot text-[10px] flex items-center justify-center border border-[#1A1A1A] font-bold"
+                        className="w-6 h-6 rounded-full bg-nothing-light text-black font-dot text-[10px] flex items-center justify-center border border-nothing-hover font-bold"
                       >
                         S{i + 1}
                       </span>
@@ -300,7 +302,7 @@ export default function CardDetailModal({
 
         {/* Image / Link Preview Section */}
         {previewImg && !imgError && (
-          <div className="rounded-2xl bg-[#1A1A1A] border border-nothing-border/60 overflow-hidden">
+          <div className="rounded-2xl bg-nothing-hover border border-nothing-border/60 overflow-hidden">
             <div
               onClick={() => setIsImageZoomed(true)}
               className="relative w-full max-h-80 bg-black flex items-center justify-center cursor-zoom-in group"
@@ -319,7 +321,7 @@ export default function CardDetailModal({
           </div>
         )}
         {previewImg && imgError && (
-          <div className="rounded-2xl bg-[#1A1A1A] border border-dashed border-nothing-border/60 p-5 flex flex-col items-center justify-center gap-2 text-center text-nothing-gray">
+          <div className="rounded-2xl bg-nothing-hover border border-dashed border-nothing-border/60 p-5 flex flex-col items-center justify-center gap-2 text-center text-nothing-gray">
             <ImageIcon size={28} className="text-nothing-gray/50" />
             <p className="text-xs font-mono text-nothing-light">
               {card.targetState === 1
@@ -336,7 +338,7 @@ export default function CardDetailModal({
 
         {/* Website Link Bar (for LINK cards) */}
         {candidateUrl && (
-          <div className="rounded-2xl bg-[#1A1A1A] border border-nothing-border/60 p-4 flex items-center justify-between gap-3">
+          <div className="rounded-2xl bg-nothing-hover border border-nothing-border/60 p-4 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
               {card.link?.favicon ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -373,11 +375,11 @@ export default function CardDetailModal({
         {(card.audio?.audioUri ||
           card.audio?.transcript ||
           (card.content && card.summary && card.content !== card.summary)) && (
-          <div className="rounded-2xl bg-[#1A1A1A] border border-nothing-border/60 p-4 sm:p-5 space-y-4">
+          <div className="rounded-2xl bg-nothing-hover border border-nothing-border/60 p-4 sm:p-5 space-y-4">
             {/* Transcript / User Note Section */}
             {(card.audio?.transcript ||
               (card.content && card.summary && card.content !== card.summary)) && (
-              <div className="rounded-xl bg-[#242424] border border-nothing-border/50 p-3.5">
+              <div className="rounded-xl bg-nothing-border border border-nothing-border/50 p-3.5">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-mono text-nothing-gray uppercase tracking-wider">
                     {card.audio?.audioUri
@@ -525,7 +527,7 @@ export default function CardDetailModal({
 
         {/* Summary Section */}
         {(card.summary || card.content || card.emotionalSummary) && (
-          <div className="rounded-2xl bg-[#1A1A1A] border border-nothing-border/60 p-4 sm:p-5 space-y-2">
+          <div className="rounded-2xl bg-nothing-hover border border-nothing-border/60 p-4 sm:p-5 space-y-2">
             <h3 className="font-dot text-xs text-nothing-gray uppercase tracking-wider">
               {card.summary ? 'SUMMARY' : 'DESCRIPTION'}
             </h3>
@@ -542,7 +544,7 @@ export default function CardDetailModal({
 
         {/* Tasks Checklist (card_events) */}
         {card.events && card.events.length > 0 && (
-          <div className="rounded-2xl bg-[#1A1A1A] border border-nothing-border/60 p-4 sm:p-5 space-y-3">
+          <div className="rounded-2xl bg-nothing-hover border border-nothing-border/60 p-4 sm:p-5 space-y-3">
             <h3 className="font-dot text-xs text-nothing-gray uppercase tracking-wider">
               TASKS ({card.events.filter(e => e.check === 1 && !e.isPotentialReminder).length}/{card.events.filter(e => !e.isPotentialReminder).length})
             </h3>
@@ -603,7 +605,7 @@ export default function CardDetailModal({
 
         {/* Key Moments (MEETING_KEY_TOPIC_ANALYSIS) */}
         {card.keyTopics && card.keyTopics.length > 0 && (
-          <div className="rounded-2xl bg-[#1A1A1A] border border-nothing-border/60 p-4 sm:p-5 space-y-3">
+          <div className="rounded-2xl bg-nothing-hover border border-nothing-border/60 p-4 sm:p-5 space-y-3">
             <h3 className="font-dot text-xs text-nothing-gray uppercase tracking-wider">
               KEY MOMENTS
             </h3>
@@ -630,7 +632,7 @@ export default function CardDetailModal({
 
         {/* Main Topics (MEETING_MAIN_TOPIC) */}
         {card.mainTopics && card.mainTopics.length > 0 && (
-          <div className="rounded-2xl bg-[#1A1A1A] border border-nothing-border/60 p-4 sm:p-5 space-y-4">
+          <div className="rounded-2xl bg-nothing-hover border border-nothing-border/60 p-4 sm:p-5 space-y-4">
             <h3 className="font-dot text-xs text-nothing-gray uppercase tracking-wider">
               MAIN TOPICS
             </h3>
@@ -650,7 +652,7 @@ export default function CardDetailModal({
 
         {/* Extracted Information / Key Values (INFO_EXTRACT) */}
         {card.infoExtract && card.infoExtract.length > 0 && (
-          <div className="rounded-2xl bg-[#1A1A1A] border border-nothing-border/60 p-4 sm:p-5 space-y-2.5">
+          <div className="rounded-2xl bg-nothing-hover border border-nothing-border/60 p-4 sm:p-5 space-y-2.5">
             <h3 className="font-dot text-xs text-nothing-gray uppercase tracking-wider">
               EXTRACTED INFO
             </h3>
@@ -684,7 +686,7 @@ export default function CardDetailModal({
 
         {/* Bullet Points (BULLET_POINTS) */}
         {card.bulletPoints && card.bulletPoints.length > 0 && (
-          <div className="rounded-2xl bg-[#1A1A1A] border border-nothing-border/60 p-4 sm:p-5 space-y-3">
+          <div className="rounded-2xl bg-nothing-hover border border-nothing-border/60 p-4 sm:p-5 space-y-3">
             <h3 className="font-dot text-xs text-nothing-gray uppercase tracking-wider">
               {card.bulletPointsTitle || 'KEY BULLET POINTS'}
             </h3>
@@ -704,7 +706,7 @@ export default function CardDetailModal({
 
         {/* Locations (LOCATION) */}
         {card.locations && card.locations.length > 0 && (
-          <div className="rounded-2xl bg-[#1A1A1A] border border-nothing-border/60 p-4 sm:p-5 space-y-2.5">
+          <div className="rounded-2xl bg-nothing-hover border border-nothing-border/60 p-4 sm:p-5 space-y-2.5">
             <h3 className="font-dot text-xs text-nothing-gray uppercase tracking-wider">
               LOCATION
             </h3>
@@ -712,7 +714,7 @@ export default function CardDetailModal({
               <a
                 key={idx}
                 href={
-                  loc.locationUrl ||
+                  safeHref(loc.locationUrl) ||
                   `https://maps.google.com/?q=${encodeURIComponent(loc.locationName)}`
                 }
                 target="_blank"
@@ -731,7 +733,7 @@ export default function CardDetailModal({
 
         {/* Freeform AI Insights (FREEFORM) */}
         {card.freeformInsights && card.freeformInsights.length > 0 && (
-          <div className="rounded-2xl bg-[#1A1A1A] border border-nothing-border/60 p-4 sm:p-5 space-y-3">
+          <div className="rounded-2xl bg-nothing-hover border border-nothing-border/60 p-4 sm:p-5 space-y-3">
             <div className="flex items-center gap-1.5 font-dot text-xs text-nothing-red uppercase tracking-wider">
               <Sparkles size={13} />
               <span>ESSENTIAL AI INSIGHT</span>
@@ -771,7 +773,7 @@ export default function CardDetailModal({
           const hasTags = Boolean(card.tags && card.tags.length > 0);
 
           return (
-            <div className="rounded-2xl bg-[#1A1A1A] border border-nothing-border/60 p-4 sm:p-5 space-y-4">
+            <div className="rounded-2xl bg-nothing-hover border border-nothing-border/60 p-4 sm:p-5 space-y-4">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <h3 className="font-dot text-xs text-nothing-gray uppercase tracking-wider flex items-center gap-2">
                   <Folder size={13} className="text-nothing-red" />
@@ -949,7 +951,7 @@ export default function CardDetailModal({
           />
           <div className="flex items-center gap-4 mt-3">
             <a
-              href={previewImg}
+              href={safeHref(previewImg)}
               target="_blank"
               rel="noopener noreferrer"
               onClick={e => e.stopPropagation()}

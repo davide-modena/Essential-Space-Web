@@ -1,7 +1,6 @@
 interface Env {}
 
 const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Accept',
   'Access-Control-Max-Age': '86400',
@@ -66,8 +65,61 @@ function extractFavicon(html: string, baseUrl: string): string {
   }
 }
 
+/** Blocks non-web schemes, odd ports and internal/private hosts (SSRF). */
+function isBlockedTarget(u: URL): boolean {
+  if (u.protocol !== 'http:' && u.protocol !== 'https:') return true;
+  if (u.port && u.port !== '80' && u.port !== '443') return true;
+  if (u.username || u.password) return true;
+  const host = u.hostname.toLowerCase().replace(/^\[|\]$/g, '');
+  if (
+    host === 'localhost' ||
+    host.endsWith('.localhost') ||
+    host.endsWith('.local') ||
+    host.endsWith('.internal') ||
+    !host.includes('.') && !host.includes(':')
+  ) {
+    return true;
+  }
+  // IPv4 literals in private, loopback, link-local or reserved ranges
+  const v4 = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (v4) {
+    const [a, b] = [Number(v4[1]), Number(v4[2])];
+    if (
+      a === 0 || a === 10 || a === 127 || a >= 224 ||
+      (a === 169 && b === 254) ||
+      (a === 172 && b >= 16 && b <= 31) ||
+      (a === 192 && b === 168) ||
+      (a === 100 && b >= 64 && b <= 127)
+    ) {
+      return true;
+    }
+  }
+  // IPv6 literals: block loopback, unique-local, link-local, mapped
+  if (host.includes(':')) {
+    if (host === '::1' || host === '::' || /^f[cd]/.test(host) || /^fe[89ab]/.test(host) || host.startsWith('::ffff:')) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** Rejects requests made by other websites (only our own pages may call this). */
+function isCrossSite(req: Request): boolean {
+  const site = req.headers.get('sec-fetch-site');
+  if (site && site !== 'same-origin' && site !== 'none') return true;
+  const origin = req.headers.get('origin');
+  if (origin && origin !== new URL(req.url).origin) return true;
+  return false;
+}
+
 export const onRequest = async (context: { request: Request; env: Env }): Promise<Response> => {
   const req = context.request;
+  if (isCrossSite(req)) {
+    return new Response(JSON.stringify({ error: 'Cross-site requests are not allowed' }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
   const url = new URL(req.url);
   let targetUrl = url.searchParams.get('url');
 
@@ -89,6 +141,13 @@ export const onRequest = async (context: { request: Request; env: Env }): Promis
   } catch {
     return new Response(JSON.stringify({ error: 'Invalid target URL' }), {
       status: 400,
+      headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+    });
+  }
+
+  if (isBlockedTarget(parsedTarget)) {
+    return new Response(JSON.stringify({ error: 'Forbidden target URL' }), {
+      status: 403,
       headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
     });
   }

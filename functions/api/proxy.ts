@@ -8,7 +8,6 @@ const ALLOWED_HOSTS = new Set([
 ]);
 
 const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS, PATCH',
   'Access-Control-Allow-Headers':
     'Authorization, Content-Type, timestamp, auth, X-Trace-Id, X-Target-Url, Accept',
@@ -22,8 +21,23 @@ export const onRequestOptions = async (): Promise<Response> => {
   });
 };
 
+/** Rejects requests made by other websites (only our own pages may call this). */
+function isCrossSite(req: Request): boolean {
+  const site = req.headers.get('sec-fetch-site');
+  if (site && site !== 'same-origin' && site !== 'none') return true;
+  const origin = req.headers.get('origin');
+  if (origin && origin !== new URL(req.url).origin) return true;
+  return false;
+}
+
 export const onRequest = async (context: { request: Request; env: Env }): Promise<Response> => {
   const req = context.request;
+  if (isCrossSite(req)) {
+    return new Response(JSON.stringify({ error: 'Cross-site requests are not allowed' }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
   const url = new URL(req.url);
   const targetUrl = url.searchParams.get('url') || req.headers.get('x-target-url');
 

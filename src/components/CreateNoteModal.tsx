@@ -28,6 +28,7 @@ import { convertToWebP } from '@/lib/image-optimizer';
 import { uploadMediaToGcs } from '@/lib/firebase-upload';
 import { useScrollLock } from '@/lib/useScrollLock';
 import { fetchLinkPreview, normalizeUrl } from '@/lib/link-preview';
+import { safeHref } from '@/lib/safe-url';
 
 interface CreateNoteModalProps {
   isOpen: boolean;
@@ -603,7 +604,7 @@ export default function CreateNoteModal({
               )}
 
               {linkPreview && (
-                <div className="rounded-xl bg-[#151515] border border-nothing-border overflow-hidden p-3.5 space-y-2.5 transition-all animate-fadeIn">
+                <div className="rounded-xl bg-nothing-card border border-nothing-border overflow-hidden p-3.5 space-y-2.5 transition-all animate-fadeIn">
                   <div className="flex items-center justify-between text-[11px] font-mono text-nothing-gray">
                     <div className="flex items-center gap-2 min-w-0">
                       {linkPreview.favicon ? (
@@ -624,7 +625,7 @@ export default function CreateNoteModal({
                       </span>
                     </div>
                     <a
-                      href={linkPreview.url}
+                      href={safeHref(linkPreview.url)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-nothing-gray hover:text-white flex items-center gap-1 text-[10px]"

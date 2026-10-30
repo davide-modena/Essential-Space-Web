@@ -1,7 +1,6 @@
 interface Env {}
 
 const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Authorization, Content-Type, Accept',
   'Access-Control-Max-Age': '86400',
@@ -511,8 +510,23 @@ export const onRequestOptions = async (): Promise<Response> => {
   });
 };
 
+/** Rejects requests made by other websites (only our own pages may call this). */
+function isCrossSite(req: Request): boolean {
+  const site = req.headers.get('sec-fetch-site');
+  if (site && site !== 'same-origin' && site !== 'none') return true;
+  const origin = req.headers.get('origin');
+  if (origin && origin !== new URL(req.url).origin) return true;
+  return false;
+}
+
 export const onRequest = async (context: { request: Request; env: Env }): Promise<Response> => {
   const req = context.request;
+  if (isCrossSite(req)) {
+    return new Response(JSON.stringify({ error: 'Cross-site requests are not allowed' }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: CORS_HEADERS });
   }
