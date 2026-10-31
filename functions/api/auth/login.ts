@@ -491,6 +491,52 @@ async function exchangeCodeForUser(session: AuthflowSession, code: string) {
   };
 }
 
+async function refreshAccessToken(
+  refreshToken: string
+): Promise<{ token: string; refreshToken: string } | null> {
+  // Some tokens are stored base64-wrapped: try the decoded form first
+  const candidates = [refreshToken];
+  try {
+    const decoded = atob(refreshToken);
+    if (decoded.length >= 20 && /^[\x20-\x7E]+$/.test(decoded) && decoded !== refreshToken) {
+      candidates.unshift(decoded);
+    }
+  } catch {
+    // not base64
+  }
+
+  let identity: CachedDeviceIdentity | null = null;
+  try {
+    identity = await getOrCreateDeviceIdentity({});
+  } catch {
+    identity = null;
+  }
+
+  for (const candidate of candidates) {
+    try {
+      const bodyStr = new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: candidate,
+        client_id: CLIENT_ID,
+      }).toString();
+      const headers = identity
+        ? await buildDeviceHeaders(identity, '/api/v2/oauth2/token', bodyStr, {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          })
+        : { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': USER_AGENT };
+
+      const res = await fetch(`${API_V2_BASE}/oauth2/token`, { method: 'POST', headers, body: bodyStr });
+      if (!res.ok) continue;
+      const data = (await res.json().catch(() => ({}))) as any;
+      if (!data.access_token) continue;
+      return { token: data.access_token, refreshToken: data.refresh_token || candidate };
+    } catch {
+      // try next candidate
+    }
+  }
+  return null;
+}
+
 function isOtpAction(action: any): boolean {
   if (!action) return false;
   return (
@@ -541,6 +587,28 @@ export const onRequest = async (context: { request: Request; env: Env }): Promis
   try {
     const body = (await req.json().catch(() => ({}))) as any;
     const { action, email, password, sessionId, code } = body;
+
+    // 0. Refresh access token (keeps the user signed in without re-login)
+    if (action === 'refresh') {
+      const refreshToken = typeof body.refreshToken === 'string' ? body.refreshToken.trim() : '';
+      if (!refreshToken) {
+        return new Response(JSON.stringify({ success: false, error: 'Missing refresh token' }), {
+          status: 400,
+          headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+        });
+      }
+      const refreshed = await refreshAccessToken(refreshToken);
+      if (!refreshed) {
+        return new Response(JSON.stringify({ success: false, error: 'REFRESH_FAILED' }), {
+          status: 401,
+          headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+        });
+      }
+      return new Response(JSON.stringify({ success: true, ...refreshed }), {
+        status: 200,
+        headers: { ...CORS_HEADERS, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+      });
+    }
 
     // 1. Verify 2FA OTP
     if (action === 'verify_otp') {

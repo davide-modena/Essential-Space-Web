@@ -25,6 +25,7 @@ import {
   deleteDbCard,
 } from '@/lib/db';
 import { syncNothingCloud } from '@/lib/sync-engine';
+import { getFreshDbAuth, refreshDbAuth } from '@/lib/auth-refresh';
 import {
   updateCloudCard,
   bulkDeleteCloudCards,
@@ -287,13 +288,23 @@ export default function DashboardPage() {
         setSyncSuccess(null);
       }
       try {
-        const localAuth = await getDbAuth();
+        // Renew the access token before it expires so the user stays signed in
+        const localAuth = await getFreshDbAuth();
         if (!localAuth || !localAuth.token) {
           router.push('/login');
           return;
         }
 
-        const syncResult = await syncNothingCloud(localAuth);
+        let syncResult;
+        try {
+          syncResult = await syncNothingCloud(localAuth);
+        } catch (err: any) {
+          // Token rejected: try the refresh token once before signing out
+          if (!String(err?.message).includes('AUTH_EXPIRED')) throw err;
+          const refreshed = await refreshDbAuth();
+          if (!refreshed) throw err;
+          syncResult = await syncNothingCloud(refreshed);
+        }
         await loadLocalData();
 
         if (!silent) {
