@@ -48,7 +48,9 @@ export default function CardGrid({
   onCollectionCreated,
 }: CardGridProps) {
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
-  const selectedCard = cards.find(c => c.cardId === selectedCardId) || null;
+  const selectedIndex = cards.findIndex(c => c.cardId === selectedCardId);
+  const selectedCard = selectedIndex >= 0 ? cards[selectedIndex] : null;
+  const goTo = (i: number) => setSelectedCardId(cards[i].cardId);
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 animate-pulse">
@@ -164,6 +166,9 @@ export default function CardGrid({
         onToggleTodo={onToggleTodo}
         onRestoreCard={onRestoreCard}
         onDeleteCard={onDeleteCard}
+        onPrev={selectedIndex > 0 ? () => goTo(selectedIndex - 1) : undefined}
+        onNext={selectedIndex >= 0 && selectedIndex < cards.length - 1 ? () => goTo(selectedIndex + 1) : undefined}
+        positionLabel={selectedIndex >= 0 && cards.length > 1 ? `${selectedIndex + 1} / ${cards.length}` : undefined}
       />
     </>
   );

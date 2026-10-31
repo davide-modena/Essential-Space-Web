@@ -24,6 +24,8 @@ import {
   FolderPlus,
   Maximize2,
   Trash2,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { getCaptureSourceLabel, type Card, type Collection } from '@/types';
 import { useScrollLock } from '@/lib/useScrollLock';
@@ -47,6 +49,11 @@ interface CardDetailModalProps {
   onToggleTodo?: (cardId: string, eventId: string) => void;
   onRestoreCard?: (cardId: string) => void;
   onDeleteCard?: (cardId: string) => void;
+  /** Go to the previous / next capture in the list (undefined = none). */
+  onPrev?: () => void;
+  onNext?: () => void;
+  /** e.g. "3 / 12" */
+  positionLabel?: string;
 }
 
 export default function CardDetailModal({
@@ -63,6 +70,9 @@ export default function CardDetailModal({
   onToggleTodo,
   onRestoreCard,
   onDeleteCard,
+  onPrev,
+  onNext,
+  positionLabel,
 }: CardDetailModalProps) {
   const [internalCard, setInternalCard] = useState<Card | null>(incomingCard);
 
@@ -81,6 +91,7 @@ export default function CardDetailModal({
   const [showSpeakers, setShowSpeakers] = useState(true);
   const [isImageZoomed, setIsImageZoomed] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
 
   // Lock background page scroll while modal is open
   useScrollLock(Boolean(card));
@@ -89,8 +100,16 @@ export default function CardDetailModal({
     setIsPlaying(false);
     setCurrentTime(0);
     setDuration(card?.audio?.duration || 45);
-    setIsImageZoomed(false);
+    // Keep the zoomed view while browsing, unless the new capture has no picture
+    setIsImageZoomed(z => z && Boolean(card?.cachedImageUrl || card?.imageUrl || card?.link?.preview));
   }, [card]);
+
+  // New capture: clear the image error and start from the top
+  const currentCardId = card?.cardId;
+  useEffect(() => {
+    setImgError(false);
+    scrollRef.current?.scrollTo({ top: 0 });
+  }, [currentCardId]);
 
   useEffect(() => {
     if (!card) return;
@@ -101,11 +120,22 @@ export default function CardDetailModal({
         } else {
           onClose();
         }
+        return;
+      }
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || isSelectCollectionOpen) return;
+      // Don't hijack arrows while typing or using the audio player
+      const t = e.target as HTMLElement | null;
+      if (t && (t.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT', 'AUDIO'].includes(t.tagName))) return;
+      const go = e.key === 'ArrowLeft' ? onPrev : onNext;
+      if (go) {
+        e.preventDefault();
+        go();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [card, isImageZoomed, onClose]);
+  }, [card, isImageZoomed, isSelectCollectionOpen, onClose, onPrev, onNext]);
 
   if (!card) return null;
 
@@ -185,7 +215,42 @@ export default function CardDetailModal({
       onClick={onClose}
       className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
     >
+      {/* Previous / next capture (also with the keyboard arrows) */}
+      {onPrev && (
+        <button
+          type="button"
+          onClick={e => {
+            e.stopPropagation();
+            onPrev();
+          }}
+          title="Previous capture (←)"
+          aria-label="Previous capture"
+          className="fixed left-2 sm:left-6 top-1/2 -translate-y-1/2 z-[70] p-2.5 rounded-full bg-black/70 backdrop-blur border border-nothing-border text-white hover:border-nothing-red hover:text-nothing-red transition-colors cursor-pointer"
+        >
+          <ChevronLeft size={22} />
+        </button>
+      )}
+      {onNext && (
+        <button
+          type="button"
+          onClick={e => {
+            e.stopPropagation();
+            onNext();
+          }}
+          title="Next capture (→)"
+          aria-label="Next capture"
+          className="fixed right-2 sm:right-6 top-1/2 -translate-y-1/2 z-[70] p-2.5 rounded-full bg-black/70 backdrop-blur border border-nothing-border text-white hover:border-nothing-red hover:text-nothing-red transition-colors cursor-pointer"
+        >
+          <ChevronRight size={22} />
+        </button>
+      )}
+      {positionLabel && (
+        <span className="fixed top-3 left-1/2 -translate-x-1/2 z-[70] px-2.5 py-0.5 rounded-full bg-black/70 border border-nothing-border text-[11px] font-mono text-white pointer-events-none">
+          {positionLabel}
+        </span>
+      )}
       <div
+        ref={scrollRef}
         onClick={e => e.stopPropagation()}
         className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl bg-nothing-card border border-nothing-border shadow-2xl p-5 sm:p-7 space-y-4 text-white"
       >
