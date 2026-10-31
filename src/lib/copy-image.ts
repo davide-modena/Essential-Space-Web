@@ -3,7 +3,7 @@
  * Falls back to /api/proxy when the image host doesn't allow CORS.
  */
 
-async function fetchImageBlob(url: string): Promise<Blob> {
+export async function fetchImageBlob(url: string): Promise<Blob> {
   // blob:/data: URLs and CORS-enabled hosts work directly
   try {
     const res = await fetch(url);

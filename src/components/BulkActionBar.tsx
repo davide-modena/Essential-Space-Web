@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import {
   FolderPlus,
   Trash2,
@@ -9,6 +10,8 @@ import {
   Square,
   Loader2,
   Folder,
+  ClipboardCopy,
+  Check,
 } from 'lucide-react';
 
 interface BulkActionBarProps {
@@ -21,6 +24,7 @@ interface BulkActionBarProps {
   onOpenAssignCollection: () => void;
   onDeleteSelected: () => void;
   onRestoreSelected?: () => void;
+  onCopyForAi?: () => Promise<void>;
   isProcessing?: boolean;
 }
 
@@ -34,9 +38,29 @@ export default function BulkActionBar({
   onOpenAssignCollection,
   onDeleteSelected,
   onRestoreSelected,
+  onCopyForAi,
   isProcessing = false,
 }: BulkActionBarProps) {
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'copying' | 'done' | 'error'>('idle');
+
+  useEffect(() => {
+    if (copyStatus !== 'done' && copyStatus !== 'error') return;
+    const t = setTimeout(() => setCopyStatus('idle'), 2000);
+    return () => clearTimeout(t);
+  }, [copyStatus]);
+
   if (selectedCount === 0) return null;
+
+  const handleCopy = async () => {
+    if (!onCopyForAi || copyStatus === 'copying') return;
+    setCopyStatus('copying');
+    try {
+      await onCopyForAi();
+      setCopyStatus('done');
+    } catch {
+      setCopyStatus('error');
+    }
+  };
 
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 max-w-[95vw] sm:max-w-2xl w-full px-2 animate-in fade-in slide-in-from-bottom-5 duration-200">
@@ -97,6 +121,36 @@ export default function BulkActionBar({
             </>
           ) : (
             <>
+              {onCopyForAi && (
+                <button
+                  type="button"
+                  disabled={isProcessing || copyStatus === 'copying'}
+                  onClick={handleCopy}
+                  className={`px-3 py-1.5 rounded-xl border transition-all text-xs font-dot uppercase tracking-wider flex items-center gap-1.5 disabled:opacity-60 ${
+                    copyStatus === 'done'
+                      ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-500'
+                      : copyStatus === 'error'
+                        ? 'bg-nothing-red/15 border-nothing-red text-nothing-red'
+                        : 'bg-white/10 border-transparent hover:bg-white text-white hover:text-black'
+                  }`}
+                  title="Copy selected captures as Markdown + HTML with pictures (for AI chats and docs)"
+                >
+                  {copyStatus === 'copying' ? (
+                    <Loader2 size={13} className="animate-spin" />
+                  ) : copyStatus === 'done' ? (
+                    <Check size={13} />
+                  ) : (
+                    <ClipboardCopy size={13} />
+                  )}
+                  <span className="hidden sm:inline">
+                    {copyStatus === 'copying' ? 'Copying' : copyStatus === 'done' ? 'Copied' : copyStatus === 'error' ? 'Failed' : 'Copy for AI'}
+                  </span>
+                  <span className="sm:hidden">
+                    {copyStatus === 'done' ? 'Copied' : copyStatus === 'error' ? 'Failed' : 'Copy'}
+                  </span>
+                </button>
+              )}
+
               <button
                 type="button"
                 disabled={isProcessing}

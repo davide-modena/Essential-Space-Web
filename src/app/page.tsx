@@ -26,6 +26,7 @@ import {
 } from '@/lib/db';
 import { syncNothingCloud } from '@/lib/sync-engine';
 import { getFreshDbAuth, refreshDbAuth } from '@/lib/auth-refresh';
+import { copyCapturesToClipboard } from '@/lib/export-captures';
 import {
   updateCloudCard,
   bulkDeleteCloudCards,
@@ -915,6 +916,9 @@ export default function DashboardPage() {
               onOpenAssignCollection={() => setIsSelectCollectionModalOpen(true)}
               onDeleteSelected={handleBulkDelete}
               onRestoreSelected={isTrash ? handleBulkRestore : undefined}
+              onCopyForAi={() =>
+                copyCapturesToClipboard(filteredCards.filter(c => selectedCardIds.has(c.cardId)))
+              }
               isProcessing={isBulkProcessing}
             />
 
