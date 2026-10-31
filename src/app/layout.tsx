@@ -1,7 +1,8 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
 import './globals.css';
 import { THEME_INIT_SCRIPT } from '@/lib/theme';
+import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
 
 const ndot57 = localFont({
   src: '../../public/fonts/Ndot57Caps-Regular.otf',
@@ -27,6 +28,13 @@ const ndotOriginal = localFont({
 export const metadata: Metadata = {
   title: 'ESSENTIAL SPACE // WEB',
   description: 'Self-hosted web dashboard for Nothing OS Essential Space notes, audio transcriptions, and tasks.',
+  applicationName: 'Essential Space',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    title: 'Essential',
+    statusBarStyle: 'black-translucent',
+  },
   icons: {
     icon: [
       { url: '/icon.svg', type: 'image/svg+xml' },
@@ -37,6 +45,14 @@ export const metadata: Metadata = {
       { url: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
     ],
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#F5F5F3' },
+    { media: '(prefers-color-scheme: dark)', color: '#000000' },
+  ],
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({
@@ -53,6 +69,7 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`${ndot55.variable} ${ndot57.variable} ${ndotOriginal.variable} bg-black text-nothing-light min-h-screen selection:bg-nothing-red selection:text-white`}
       >
+        <ServiceWorkerRegister />
         {children}
       </body>
     </html>
