@@ -31,19 +31,12 @@ async function toPngBlob(blob: Blob): Promise<Blob> {
   );
 }
 
-export type CopyImageResult = 'image' | 'link';
-
-export async function copyImageToClipboard(url: string): Promise<CopyImageResult> {
-  if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
-    try {
-      // Pass a promise so Safari keeps the user gesture while we download
-      const png = fetchImageBlob(url).then(toPngBlob);
-      await navigator.clipboard.write([new ClipboardItem({ 'image/png': png })]);
-      return 'image';
-    } catch {
-      // fall through to copying the link
-    }
+/** Copies the image itself (never the link). Throws if the browser can't. */
+export async function copyImageToClipboard(url: string): Promise<void> {
+  if (typeof ClipboardItem === 'undefined' || !navigator.clipboard?.write) {
+    throw new Error('This browser cannot copy images to the clipboard');
   }
-  await navigator.clipboard.writeText(url);
-  return 'link';
+  // Pass a promise so Safari keeps the user gesture while we download
+  const png = fetchImageBlob(url).then(toPngBlob);
+  await navigator.clipboard.write([new ClipboardItem({ 'image/png': png })]);
 }

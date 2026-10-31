@@ -5,7 +5,13 @@ const ALLOWED_HOSTS = new Set([
   'account-c2-api.nothingtech.link',
   'firebasestorage.googleapis.com',
   'identitytoolkit.googleapis.com',
+  // Signed URLs for capture images (needed to copy them to the clipboard)
+  'storage.googleapis.com',
 ]);
+
+function isAllowedHost(hostname: string): boolean {
+  return ALLOWED_HOSTS.has(hostname) || hostname.endsWith('.storage.googleapis.com');
+}
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS, PATCH',
@@ -58,7 +64,7 @@ export const onRequest = async (context: { request: Request; env: Env }): Promis
     );
   }
 
-  if (!ALLOWED_HOSTS.has(parsedUrl.hostname)) {
+  if (!isAllowedHost(parsedUrl.hostname)) {
     return new Response(
       JSON.stringify({ error: `Forbidden host: ${parsedUrl.hostname}` }),
       { status: 403, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } }
