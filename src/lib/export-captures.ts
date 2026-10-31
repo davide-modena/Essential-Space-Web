@@ -1,17 +1,9 @@
 import type { Card } from '@/types';
-import { fetchImageBlob } from './copy-image';
 
-/**
- * Copies several captures to the clipboard in one go:
- * - text/plain: Markdown with numbered picture links (for Claude Code / AI chats)
- * - text/html: same content with the pictures embedded (for Docs, Notion, email)
- */
+/** Copies several captures to the clipboard as Markdown with numbered picture links (for AI chats). */
 
 const AI_NOTE =
   '> Pictures are temporary signed links: download and look at each one before answering.';
-
-/** Longest side of embedded pictures, keeps the HTML clipboard reasonably small. */
-const MAX_EMBED_SIDE = 1600;
 
 interface Section {
   card: Card;
@@ -27,14 +19,6 @@ function formatDate(ms: number): string {
     hour: '2-digit',
     minute: '2-digit',
   });
-}
-
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
 }
 
 /** Text blocks of a card as [label, value] pairs (shared by Markdown and HTML). */
@@ -107,70 +91,7 @@ export function buildMarkdown(cards: Card[]): string {
   return out.join('\n') + '\n';
 }
 
-/** Downloads a picture and returns it as a (downscaled) data: URI, or the URL on failure. */
-async function embedPicture(url: string): Promise<string> {
-  try {
-    const blob = await fetchImageBlob(url);
-    const bitmap = await createImageBitmap(blob);
-    const scale = Math.min(1, MAX_EMBED_SIDE / Math.max(bitmap.width, bitmap.height));
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.round(bitmap.width * scale);
-    canvas.height = Math.round(bitmap.height * scale);
-    canvas.getContext('2d')!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    bitmap.close();
-    return canvas.toDataURL('image/jpeg', 0.85);
-  } catch {
-    return url;
-  }
-}
-
-export async function buildHtml(cards: Card[]): Promise<string> {
-  const sections = buildSections(cards);
-  const pictures = await Promise.all(
-    sections.map(s => (s.pictureUrl ? embedPicture(s.pictureUrl) : Promise.resolve(undefined)))
-  );
-
-  const parts: string[] = [`<h1>${cards.length} capture${cards.length === 1 ? '' : 's'}</h1>`];
-  sections.forEach(({ card, pictureNo }, i) => {
-    parts.push(`<h2>${escapeHtml(heading(card, i))}</h2>`, `<p><em>${escapeHtml(formatDate(card.createTime))}</em></p>`);
-    for (const f of cardFields(card)) {
-      if (f.list) {
-        parts.push(
-          `<p><strong>${escapeHtml(f.label)}:</strong></p><ul>${f.list.map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul>`
-        );
-      } else if (f.text) {
-        parts.push(`<p><strong>${escapeHtml(f.label)}:</strong> ${escapeHtml(f.text).replace(/\n/g, '<br>')}</p>`);
-      }
-    }
-    const src = pictures[i];
-    if (src) {
-      parts.push(
-        `<p><img src="${escapeHtml(src)}" alt="Picture #${pictureNo}" style="max-width:100%"><br><em>Picture #${pictureNo}</em></p>`
-      );
-    }
-  });
-
-  return `<meta charset="utf-8">${parts.join('\n')}`;
-}
-
-/** Writes Markdown (plain text) and HTML (embedded pictures) to the clipboard together. */
+/** Writes the Markdown to the clipboard as plain text. */
 export async function copyCapturesToClipboard(cards: Card[]): Promise<void> {
-  const markdown = buildMarkdown(cards);
-
-  if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
-    try {
-      // Promises keep the user gesture alive while pictures download (Safari)
-      const html = buildHtml(cards).then(h => new Blob([h], { type: 'text/html' }));
-      await navigator.clipboard.write([
-        new ClipboardItem({
-          'text/plain': new Blob([markdown], { type: 'text/plain' }),
-          'text/html': html,
-        }),
-      ]);
-      return;
-    } catch {
-      // fall back to Markdown only
-    }
-  }
-  await navigator.clipboard.writeText(markdown);
+  await navigator.clipboard.writeText(buildMarkdown(cards));
 }

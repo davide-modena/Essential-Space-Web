@@ -133,7 +133,7 @@ export default function BulkActionBar({
                         ? 'bg-nothing-red/15 border-nothing-red text-nothing-red'
                         : 'bg-white/10 border-transparent hover:bg-white text-white hover:text-black'
                   }`}
-                  title="Copy selected captures as Markdown + HTML with pictures (for AI chats and docs)"
+                  title="Copy selected captures as Markdown with picture links (for AI chats)"
                 >
                   {copyStatus === 'copying' ? (
                     <Loader2 size={13} className="animate-spin" />
