@@ -54,6 +54,9 @@ export default function SelectCollectionModal({
   // Lock background page scroll while modal is open
   useScrollLock(isOpen);
 
+  // Reset only when the modal opens. Depending on initialCollectionIds would
+  // re-run on every render (the default [] is a new array each time) and wipe
+  // the user's selection as soon as they tick a collection.
   useEffect(() => {
     if (isOpen) {
       setSearch('');
@@ -63,7 +66,8 @@ export default function SelectCollectionModal({
       setNewCollectionName('');
       setCreateError(null);
     }
-  }, [isOpen, initialCollectionIds]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
