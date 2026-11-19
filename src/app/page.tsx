@@ -33,6 +33,7 @@ import {
   bulkRestoreCloudCards,
   bulkHardDeleteCloudCards,
   bulkAssignCollectionCloudCards,
+  repairInventedCaptureFrom,
 } from '@/lib/nothing-cards';
 import { getCaptureSourceLabel, type Card, type Collection } from '@/types';
 import { getSavedAiLanguage, saveAiLanguage } from '@/lib/languages';
@@ -297,6 +298,7 @@ export default function DashboardPage() {
         }
 
         let syncResult;
+        let activeAuth = localAuth;
         try {
           syncResult = await syncNothingCloud(localAuth);
         } catch (err: any) {
@@ -304,7 +306,15 @@ export default function DashboardPage() {
           if (!String(err?.message).includes('AUTH_EXPIRED')) throw err;
           const refreshed = await refreshDbAuth();
           if (!refreshed) throw err;
+          activeAuth = refreshed;
           syncResult = await syncNothingCloud(refreshed);
+        }
+        // Fix cards written with an invalid capture_from (crashes the Android app)
+        try {
+          const fixed = await repairInventedCaptureFrom(activeAuth.token);
+          if (fixed > 0) await syncNothingCloud(activeAuth);
+        } catch (repairErr) {
+          console.warn('capture_from repair skipped:', repairErr);
         }
         await loadLocalData();
 

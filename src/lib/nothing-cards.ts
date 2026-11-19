@@ -6,10 +6,27 @@ import {
   encryptPayload,
 } from './crypto';
 import { nothingFetch } from './nothing-fetch';
-import { saveDbCards, updateDbCard, deleteDbCard } from './db';
+import { saveDbCards, updateDbCard, deleteDbCard, getDbCards } from './db';
 import type { Card, CardType, CardEvent } from '@/types';
 
 const DEVICE_MODEL = 'A059';
+
+/**
+ * The official app stores the package name of the source app in capture_from
+ * (e.g. com.android.chrome) and leaves it empty for typed notes and recordings.
+ * These values were invented by this web client and are not valid there: the
+ * Android app crashes on them ("Key \"note\" was already used"). Never write them.
+ */
+const INVENTED_CAPTURE_FROM = new Set(['note', 'recording', 'share_sheet', 'web.essential.space']);
+
+export function isInventedCaptureFrom(value?: string | null): boolean {
+  return Boolean(value && INVENTED_CAPTURE_FROM.has(value));
+}
+
+/** Returns the value only when it is a real source (e.g. an app package name). */
+function validCaptureFrom(value?: string | null): string | undefined {
+  return value && !INVENTED_CAPTURE_FROM.has(value) ? value : undefined;
+}
 
 /**
  * Format timestamp string matching Nothing Android ScreenshotEngine.getUserContent
@@ -374,9 +391,7 @@ export async function createCloudCard(params: {
   try {
     const cardId = generateUuid();
     const now = Date.now();
-    const targetCaptureFrom =
-      params.captureFrom ||
-      (params.type === 'LINK' ? 'share_sheet' : (params.type === 'AUDIO' ? 'recording' : 'note'));
+    const targetCaptureFrom = validCaptureFrom(params.captureFrom);
     const targetCollectionIds = (params.collectionIds && params.collectionIds.length > 0)
       ? params.collectionIds
       : (params.collectionId ? [params.collectionId] : []);
@@ -601,7 +616,7 @@ export async function createCloudCard(params: {
         create_time: now,
         update_time: now,
         resource_mask: resourceMask,
-        capture_from: targetCaptureFrom,
+        ...(targetCaptureFrom ? { capture_from: targetCaptureFrom } : {}),
       },
       card_resources: cardResources.map((r: any) => ({
         ...r,
@@ -685,6 +700,7 @@ export async function updateCloudCards(
     const now = Date.now();
     const updatedCards: Card[] = cardsToUpdate.map(c => ({
       ...c,
+      captureFrom: validCaptureFrom(c.captureFrom),
       updateTime: now,
     }));
 
@@ -716,10 +732,12 @@ export async function updateCloudCards(
           if (c.summary || c.content) cr.cards.summary = c.summary || c.content;
           cr.cards.update_time = now;
           cr.cards.target_state = c.targetState ?? cr.cards.target_state ?? 0;
-          if (c.captureFrom) {
-            cr.cards.capture_from = c.captureFrom;
-          } else if (!cr.cards.capture_from) {
-            cr.cards.capture_from = c.type === 'LINK' ? 'share_sheet' : (c.type === 'AUDIO' ? 'recording' : 'note');
+          // Keep real sources, drop invented ones (also repairs cards written earlier)
+          const source = validCaptureFrom(c.captureFrom) || validCaptureFrom(cr.cards.capture_from);
+          if (source) {
+            cr.cards.capture_from = source;
+          } else {
+            delete cr.cards.capture_from;
           }
 
           if (Array.isArray(cr.card_resources)) {
@@ -754,7 +772,6 @@ export async function updateCloudCards(
               if (cr.cards) {
                 cr.cards.resource_mask = (cr.cards.resource_mask || 0) | 512;
                 cr.cards.type = 'LINK';
-                if (!cr.cards.capture_from) cr.cards.capture_from = 'share_sheet';
               }
             }
           }
@@ -844,7 +861,7 @@ export async function updateCloudCards(
               create_time: c.createTime || now,
               update_time: now,
               resource_mask: resourceMask,
-              capture_from: c.captureFrom || (c.type === 'LINK' ? 'share_sheet' : (c.type === 'AUDIO' ? 'recording' : 'note')),
+              ...(validCaptureFrom(c.captureFrom) ? { capture_from: validCaptureFrom(c.captureFrom) } : {}),
               target_state: c.targetState || 0,
             },
             card_resources: baselineResources,
@@ -920,6 +937,11 @@ export async function updateCloudCards(
                   targetCard.targetState ?? serverCr.cards.target_state ?? 0;
               }
 
+              // The server copy may still carry an invented capture_from: never send it back
+              if (serverCr.cards && isInventedCaptureFrom(serverCr.cards.capture_from)) {
+                delete serverCr.cards.capture_from;
+              }
+
               if (Array.isArray(serverCr.card_events) && targetCard.events) {
                 for (const ev of serverCr.card_events) {
                   const localEv = targetCard.events.find(
@@ -992,6 +1014,27 @@ export async function updateCloudCards(
     console.error('Error updating cards:', err);
     return { success: false, error: err?.message || 'Network error' };
   }
+}
+
+/**
+ * One-time repair: rewrites cards that carry an invented capture_from (see
+ * INVENTED_CAPTURE_FROM) so the official Android app can open its lists again.
+ * Returns how many cards were fixed.
+ */
+let captureFromRepairTried = false;
+
+export async function repairInventedCaptureFrom(token: string): Promise<number> {
+  // One attempt per page session: if the server keeps the field, don't rewrite on every sync
+  if (captureFromRepairTried) return 0;
+  const bad = (await getDbCards()).filter(c => isInventedCaptureFrom(c.captureFrom));
+  if (bad.length === 0) return 0;
+  captureFromRepairTried = true;
+  const res = await updateCloudCards(token, bad);
+  if (!res.success) {
+    console.warn('capture_from repair failed:', res.error);
+    return 0;
+  }
+  return bad.length;
 }
 
 /**
